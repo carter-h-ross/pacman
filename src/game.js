@@ -2,6 +2,7 @@
 
 // author: carter ross
 // A-start pathfinding algorithim used from: http://github.com/bgrins/javascript-astar
+// credit to Bowen for the idea for the game
 
 /* ---------------------------------------------------------------------- firebase -------------------------------------------------------------------*/
 
@@ -461,7 +462,7 @@ function degToRad(degrees) {
     return radians;
 }
 
-class ghost {
+class Ghost {
 
     constructor(x,y,z,id) {
         self.x = x;
@@ -484,7 +485,7 @@ class ghost {
     
 }
 
-class world {
+class World {
 
     constructor(dimensions, map, skybox, id) {
         self.dimensions = dimensions;
@@ -499,10 +500,86 @@ class world {
     
 }
 
+
+class Map {
+    constructor(codes) {
+        this.codes = codes;
+        this.sizeX = codes[0][0].length;
+        this.sizeZ = codes[0].length;
+        this.sizeY = codes.length;
+    }
+
+    buildWalls(height) {
+        for (let y = 0; y < height; y++) {
+            let newMap = JSON.parse(JSON.stringify(this.codes)); // Create a deep copy of the current map
+            for (let x = 1; x < this.sizeX - 1; x++) {
+                for (let z = 1; z < this.sizeZ - 1; z++) {
+                    if (this.codes[y][z][x] === 0 && this.isAdjacentToBlock(x, z, y)) {
+                        newMap[y][z][x] = 1;
+                    }
+                }
+            }
+            this.codes = newMap;
+        }
+        return this;
+    }
+
+    isAdjacentToBlock(x, z, y) {
+        // Check if the position is one block away from a 1
+        for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+                for (let k = -1; k <= 1; k++) {
+                    if (this.codes[y + k] && this.codes[y + k][z + i] && this.codes[y + k][z + i][x + j] === 1) {
+                        if (k !== 0 || i !== 0 || j !== 0) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    addGhosts(x1,z1,x2,z2,x3,z3,x4,z4) {
+        this.codes[1][z1][x1] = 11;
+        if (this.codes[0][z1][x1] == 0) {
+            alert("invalid ghost placement on map");
+        }
+        this.codes[1][z2][x2] = 12;
+        if (this.codes[0][z2][x2] == 0) {
+            alert("invalid ghost placement on map");
+        }
+        this.codes[1][z3][x3] = 13;
+        if (this.codes[0][z3][x3] == 0) {
+            alert("invalid ghost placement on map");
+        }
+        this.codes[1][z4][x4] = 14;
+        if (this.codes[0][z4][x4] == 0) {
+            alert("invalid ghost placement on map");
+        }
+    }
+
+    addPlayer(x,z,dir) {
+        switch (dir) {
+            case 'n':
+                this.codes[1][z][x] = 21;
+            case 'e':
+                this.codes[1][z][x] = 22;
+            case 's':
+                this.codes[1][z][x] = 23;
+            case 'w':
+                this.codes[1][z][x] = 24;
+        }
+        if (this.codes[0][z][x] == 0) {
+            alert("invalid player placement on map");
+        }
+    }
+}
+
 const scene = new THREE.Scene();
 const gltfLoader = new GLTFLoader();
 
-testMap = [
+testMap = new Map([
 [//  0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5  6  7  8  9
     [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 1
     [ 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0], // 2
@@ -525,4 +602,4 @@ testMap = [
     [ 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0], // 9
     [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], // 0
 ]
-]
+]).buildWalls(2).addGhosts(1,1, 1,18, 18,1, 18,18).addPlayer(15, 9, "w");
